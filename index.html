@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+
+<html manifest="test.appcache">
+  <title>Airport Data</title>
+  <link rel="stylesheet" type="text/css" href="airports.css">
+  <p style="font-size: 30pt; text-align: center; top: 25vh; left: 25vw; max-width: 50vw; position: relative;" id="airport"></p>
+  <p style="font-size: 10pt; bottom: 0vh; left: 2vh; position: absolute">If a checkpoint is missing, it is due to a lack of or faulty data provided by the TSA</p>
+  
+  <form id="frm1" action="form_action.asp">
+    3 letter code: <input type="text" id="input" >
+  </form> 
+  <button onclick="getID()">Submit</button>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+  <script>
+  	//START OF CHOOSING AIPORT
+	var inputID = "EWR";
+
+	//function getID() {
+	//	inputID = document.getElementById("input").value;
+	//}
+  	/*$('input[name="letterCode"]').change(function() {
+		inputID = $('input[name="email"]').value;
+	}); */
+	//console.log(inputID);
+
+  	//START SETUP OF VARIABLES AND FILES
+    var data, allAirports, waiting, inputIndex, checkpointID, airportNameStart, airportNameEnd, airportName; 
+    var nextAirportIndex, checkpointIndexStart, checkpointIndexEnd;
+    var checkpointNames = [];
+
+    var waitTimes = ["No wait", "1-10 min", "11-20 min", "21-30 min", "31+ min"];
+    var infoAddress = "http://apps.tsa.dhs.gov/MyTSAWebService/GetWaitTimes.ashx?ap=" + inputID;
+  	var checkpointsCovered = [];
+  	var waitTimesIndices = [];
+
+  	var xhttp = new XMLHttpRequest();
+  	xhttp.open("GET", "https://www.tsa.gov/data/apcp.xml", false); //false makes it not asynchronous
+  	xhttp.send();
+  	allAirports = xhttp.responseXML;
+
+  	xhttp.open("GET", infoAddress, false);
+  	xhttp.send();
+  	data = xhttp.responseXML;
+  	waiting = data.getElementsByTagName("WaitTimes");
+  	//END SETUP OF VARIABLES AND FILES
+
+  	//START CREATING FUNCTIONS TO ORGANIZE CODE
+
+  	function createTable(checkpoints, waitingTimes, changes) {
+  		var body = document.getElementsByTagName('body')[0];
+ 		var tbl = document.createElement("table");
+ 		var tblBody = document.createElement("tbody");
+
+  		for(var i = 0; i < checkpoints.length + 1; i++) {
+  			var row = document.createElement("tr");
+ 
+ 			for (var j = 0; j < 3; j++) {
+		      	var cell, cellText;
+		      	if(i == 0) {
+		      		cell = document.createElement("th");
+		      	} else {
+		            cell = document.createElement("td");
+		      	}
+
+		      	if(i == 0 && j == 0) {
+		      		cellText = document.createTextNode("Checkpoint name");
+		      	} else if(i == 0 && j == 1) {
+		      		cellText = document.createTextNode("Waiting time");
+		      	} else if(i == 0) {
+		      		cellText = document.createTextNode("Changing wait time");
+		      	} else if(j == 0) {
+		      		cellText = document.createTextNode(checkpoints[i - 1]);
+		      	} else if(j == 1) {
+		      		cellText = document.createTextNode(waitingTimes[i - 1]);
+		      	} else {
+		      		cellText = document.createTextNode(changes[i - 1]);
+		      	}
+
+		      	cell.appendChild(cellText);
+		      	row.appendChild(cell);
+		    }
+
+		    // add the row to the end of the table body
+		    tblBody.appendChild(row);
+		}
+		 
+		// put the <tbody> in the <table>
+		tbl.appendChild(tblBody);
+		// appends <table> into <body>
+		body.appendChild(tbl);
+		// sets the border attribute of tbl to 2;
+		tbl.setAttribute("border", "1");
+  	}
+
+  	function isChanging(originalChecks, originalTimes, extraChecks, extraTimes) {
+  		//console.log(originalChecks);
+  		//console.log(originalTimes);
+  		//console.log(extraChecks);
+  		//console.log(extraTimes);
+  		var finalChanging = [];
+  		for(var i = 0; i < originalChecks.length; i++) {
+  			for(var j = 0; j < extraChecks.length; j++) {
+  				if(originalChecks[i] == extraChecks[j]) {
+  					if(extraTimes[j] > originalTimes[i])
+  						finalChanging.push("Decreasing");
+  					else if(extraTimes[j] < originalTimes[i])
+  						finalChanging.push("Increasing");
+  					else
+  						finalChanging.push("Not changing");
+  				}
+  			}
+  			if(extraChecks.indexOf(originalChecks[i]) == -1) {
+  				finalChanging.push("Unknown");
+  			}
+  		}
+  		return finalChanging;
+  	}
+
+  	//END CREATING FUNCTIONS TO ORGANIZE CODE
+
+  	//START GETTING DATA
+  	var airportList = allAirports.getElementsByTagName("airport");
+	
+  	for(var i = 0; i < airportList.length; i++) {
+  		if(airportList[i].childNodes[1].innerHTML == inputID) {
+  			$("#airport").html(airportList[i].childNodes[0].innerHTML);
+  	  			for(var j = 0; j < airportList[i].getElementsByTagName("checkpoints")[0].getElementsByTagName("checkpoint").length; j++) {
+  					checkpointNames.push(airportList[i].getElementsByTagName("checkpoints")[0].getElementsByTagName("checkpoint")[j].childNodes[1].innerHTML);		
+  				}
+  		}
+  	} 
+
+  	var compiledDataCheck = [], compiledDataWait = [];
+  	var unknownCheck = 0, unknownWait; //for unknown checkpoints
+  	var compiledExtraChecks = [], extraWaitIndices = [], coveredExtras = [];
+
+	for(var i = 0; i < waiting.length; i++) {
+		if(checkpointsCovered.indexOf(waiting[i].childNodes[0].innerHTML) < 0 && waiting[i].childNodes[0].innerHTML != 0) {
+			checkpointsCovered.push(waiting[i].childNodes[0].innerHTML);
+			waitTimesIndices.push(waiting[i].childNodes[1].innerHTML);
+		} else if(unknownCheck == 0 && waiting[i].childNodes[0].innerHTML == 0) {
+			unknownCheck = 1;
+			unknownWait = waiting[i].childNodes[1].innerHTML;
+		} else if(compiledExtraChecks.indexOf(waiting[i].childNodes[0].innerHTML) < 0) {
+			compiledExtraChecks.push(waiting[i].childNodes[0].innerHTML);
+			extraWaitIndices.push(waiting[i].childNodes[0].innerHTML);
+		}
+	}
+	
+	for(var i = 0; i < checkpointsCovered.length; i++) {
+		compiledDataCheck.push(checkpointNames[checkpointsCovered[i] - 1]);
+		compiledDataWait.push(waitTimes[waitTimesIndices[i] - 1]);
+	}
+
+	if(unknownCheck == 1) {
+		compiledDataCheck.push("Unknown checkpoint");
+		compiledDataWait.push(waitTimes[unknownWait - 1]);
+	} 
+
+	var changingTimes = isChanging(checkpointsCovered, waitTimesIndices, compiledExtraChecks, extraWaitIndices);
+
+	//console.log(changingTimes);
+
+	//console.log(compiledDataCheck);
+	//console.log(compiledDataWait);
+	createTable(compiledDataCheck, compiledDataWait, changingTimes);
+	//END GETTING DATA
+
+  </script>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
