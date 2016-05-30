@@ -35,11 +35,13 @@
   	var waitTimesIndices = [];
 
   	var xhttp = new XMLHttpRequest();
-  	xhttp.open("GET", "https://www.tsa.gov/data/apcp.xml", false); //false makes it not asynchronous
+  	//xhttp.open("GET", "https://www.tsa.gov/data/apcp.xml", false); //false makes it not asynchronous
+  	xhttp.open("GET", "apcp.xml", false);
   	xhttp.send();
   	allAirports = xhttp.responseXML;
 
-  	xhttp.open("GET", infoAddress, false);
+  	//xhttp.open("GET", infoAddress, false);
+  	xhttp.open("GET", "ATL.xml", false);
   	xhttp.send();
   	data = xhttp.responseXML;
   	waiting = data.getElementsByTagName("WaitTimes");
@@ -170,30 +172,3 @@
   </script>
 
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
