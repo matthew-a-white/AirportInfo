@@ -2,14 +2,35 @@
 
 <html manifest="test.appcache">
   <title>Airport Data</title>
-  <head>Testing gathering data and displaying for each airport</head>
-  <div id="info"></div>
-  
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js">
+  <p style="font-size: 30pt; text-align: center; top: 25vh; left: 25vw; max-width: 50vw; position: relative;" id="airport">Test airport</p>
+  <div id="info" style="top: 20vh; position: relative;">THIS SHOULD BE REPLACED WITH DATA</div>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
   <script>
-    var data = "http://apps.tsa.dhs.gov/MyTSAWebService/GetWaitTimes.ashx?ap=ATL&output=json"
-    data = JSON.parse(data);
-    $("#info").html(data);
+
+    var details, allAirports, inputID, inputIndex, checkpointID, airportNameStart, airportNameEnd, airportName; 
+    var nextAirportIndex, checkpointIndexStart, checkpointIndexEnd;
+
+    inputID = "ATL";
+
+    var waitTimes = ["No wait", "1-10 min", "11-20 min", "21-30 min", "31+ min"];
+    var checkpointNames = [];
+
+  	$.getJSON("http://apps.tsa.dhs.gov/MyTSAWebService/GetWaitTimes.ashx?ap=ATL&output=json", function(json) {
+		details = json;
+  	}); 	
+
+  	var xhttp = new XMLHttpRequest();
+  	xhttp.open("GET", "https://www.tsa.gov/data/apcp.xml", false);
+  	xhttp.send();
+  	allAirports = xhttp.responseXML;
+  	
+	  console.log(allAirports.getElementsByTagName("airport")[1].childNodes[0].nodeType);
   </script>
+  
+  <style>
+  	body { background-color: #E2E3E5; }
+
+  </style>
   
 </html>
