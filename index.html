@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<html manifest="test.appcache">
+<html manifest="index.appcache">
   <title>Airport Data</title>
   <link rel="stylesheet" type="text/css" href="airports.css">
   <p style="font-size: 30pt; text-align: center; top: 25vh; left: 25vw; max-width: 50vw; position: relative;" id="airport"></p>
@@ -10,11 +10,13 @@
     3 letter code: <input type="text" id="input" >
   </form> 
   <button onclick="getID()">Submit</button>
+  
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+  <!-- <script src="jquery.min.js"></script> -->
 
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
   <script>
   	//START OF CHOOSING AIPORT
-	var inputID = "EWR";
+	var inputID = "ATL";
 
 	//function getID() {
 	//	inputID = document.getElementById("input").value;
@@ -33,15 +35,16 @@
     var infoAddress = "http://apps.tsa.dhs.gov/MyTSAWebService/GetWaitTimes.ashx?ap=" + inputID;
   	var checkpointsCovered = [];
   	var waitTimesIndices = [];
+  	var updateWaitTimes = [];
 
   	var xhttp = new XMLHttpRequest();
   	//xhttp.open("GET", "https://www.tsa.gov/data/apcp.xml", false); //false makes it not asynchronous
-  	xhttp.open("GET", "apcp.xml", false);
+  	xhttp.open("GET", "apcp.xml", false); //false makes it not asynchronous
   	xhttp.send();
   	allAirports = xhttp.responseXML;
 
-  	//xhttp.open("GET", infoAddress, false);
-  	xhttp.open("GET", "ATL.xml", false);
+  	xhttp.open("GET", infoAddress, false);
+  	//xhttp.open("GET", "ATL.xml", false);
   	xhttp.send();
   	data = xhttp.responseXML;
   	waiting = data.getElementsByTagName("WaitTimes");
@@ -49,7 +52,7 @@
 
   	//START CREATING FUNCTIONS TO ORGANIZE CODE
 
-  	function createTable(checkpoints, waitingTimes, changes) {
+  	function createTable(checkpoints, waitingTimes, updateTimes, changes) {
   		var body = document.getElementsByTagName('body')[0];
  		var tbl = document.createElement("table");
  		var tblBody = document.createElement("tbody");
@@ -57,7 +60,7 @@
   		for(var i = 0; i < checkpoints.length + 1; i++) {
   			var row = document.createElement("tr");
  
- 			for (var j = 0; j < 3; j++) {
+ 			for (var j = 0; j < 4; j++) {
 		      	var cell, cellText;
 		      	if(i == 0) {
 		      		cell = document.createElement("th");
@@ -69,12 +72,16 @@
 		      		cellText = document.createTextNode("Checkpoint name");
 		      	} else if(i == 0 && j == 1) {
 		      		cellText = document.createTextNode("Waiting time");
+		      	} else if(i == 0 && j == 2) {
+		      		cellText = document.createTextNode("Last update");
 		      	} else if(i == 0) {
 		      		cellText = document.createTextNode("Changing wait time");
 		      	} else if(j == 0) {
 		      		cellText = document.createTextNode(checkpoints[i - 1]);
 		      	} else if(j == 1) {
 		      		cellText = document.createTextNode(waitingTimes[i - 1]);
+		      	} else if(j == 2) {
+		      		cellText = document.createTextNode(updateTimes[i - 1]);
 		      	} else {
 		      		cellText = document.createTextNode(changes[i - 1]);
 		      	}
@@ -96,12 +103,12 @@
   	}
 
   	function isChanging(originalChecks, originalTimes, extraChecks, extraTimes) {
-  		//console.log(originalChecks);
-  		//console.log(originalTimes);
-  		//console.log(extraChecks);
-  		//console.log(extraTimes);
   		var finalChanging = [];
   		for(var i = 0; i < originalChecks.length; i++) {
+  			if(extraChecks.indexOf(originalChecks[i]) == -1) {
+  				finalChanging.push("Unknown");
+  			}
+
   			for(var j = 0; j < extraChecks.length; j++) {
   				if(originalChecks[i] == extraChecks[j]) {
   					if(extraTimes[j] > originalTimes[i])
@@ -111,9 +118,6 @@
   					else
   						finalChanging.push("Not changing");
   				}
-  			}
-  			if(extraChecks.indexOf(originalChecks[i]) == -1) {
-  				finalChanging.push("Unknown");
   			}
   		}
   		return finalChanging;
@@ -136,39 +140,84 @@
   	var compiledDataCheck = [], compiledDataWait = [];
   	var unknownCheck = 0, unknownWait; //for unknown checkpoints
   	var compiledExtraChecks = [], extraWaitIndices = [], coveredExtras = [];
+  	var unparsedUpdate, tIndex, endUpdateIndex;
+  	var date, specificTime, unknownUpdateTime, indexOfUnknown = -1, counter = 0;
+  	var extraZeroCheck = false;
 
-	for(var i = 0; i < waiting.length; i++) {
+	for(var i = 0; i < waiting.length; i++) {  //waiting is list of all WaitTimes nodes
+		if(compiledExtraChecks.indexOf(waiting[i].childNodes[0].innerHTML) < 0) {
+			if(checkpointsCovered.indexOf(waiting[i].childNodes[0].innerHTML) > -1) {
+				compiledExtraChecks.push(waiting[i].childNodes[0].innerHTML);
+				extraWaitIndices.push(waiting[i].childNodes[1].innerHTML);
+			} 
+		}
+
 		if(checkpointsCovered.indexOf(waiting[i].childNodes[0].innerHTML) < 0 && waiting[i].childNodes[0].innerHTML != 0) {
 			checkpointsCovered.push(waiting[i].childNodes[0].innerHTML);
 			waitTimesIndices.push(waiting[i].childNodes[1].innerHTML);
-		} else if(unknownCheck == 0 && waiting[i].childNodes[0].innerHTML == 0) {
-			unknownCheck = 1;
+			counter++;
+
+			//FOR FINDING THE DATE
+			unparsedUpdate = waiting[i].childNodes[2].innerHTML;
+			tIndex = unparsedUpdate.indexOf("T");
+			endUpdateIndex = unparsedUpdate.indexOf("-04:00");
+			date = unparsedUpdate.substring(0, tIndex);
+			specificTime = unparsedUpdate.substring(tIndex + 1, endUpdateIndex);
+			updateWaitTimes.push(date + " at " + specificTime);
+		} else if(indexOfUnknown == -1 && waiting[i].childNodes[0].innerHTML == 0) {
+			checkpointsCovered.push("0");
+			waitTimesIndices.push(waiting[i].childNodes[1].innerHTML);
+			indexOfUnknown = counter;
 			unknownWait = waiting[i].childNodes[1].innerHTML;
-		} else if(compiledExtraChecks.indexOf(waiting[i].childNodes[0].innerHTML) < 0) {
-			compiledExtraChecks.push(waiting[i].childNodes[0].innerHTML);
-			extraWaitIndices.push(waiting[i].childNodes[0].innerHTML);
+
+			//FOR FINDING THE DATE
+			unparsedUpdate = waiting[i].childNodes[2].innerHTML;
+			tIndex = unparsedUpdate.indexOf("T");
+			endUpdateIndex = unparsedUpdate.indexOf("-04:00");
+			date = unparsedUpdate.substring(0, tIndex);
+			specificTime = unparsedUpdate.substring(tIndex + 1, endUpdateIndex);
+			unknownUpdateTime = date + " at " + specificTime;
+			updateWaitTimes.push(unknownUpdateTime);
 		}
 	}
-	
+
 	for(var i = 0; i < checkpointsCovered.length; i++) {
-		compiledDataCheck.push(checkpointNames[checkpointsCovered[i] - 1]);
-		compiledDataWait.push(waitTimes[waitTimesIndices[i] - 1]);
+		if(i == indexOfUnknown) {
+			compiledDataCheck.push("Unknown checkpoint");
+			compiledDataWait.push(waitTimes[unknownWait - 1]);
+		}
+
+		if(checkpointsCovered[i] != 0) {
+			compiledDataCheck.push(checkpointNames[checkpointsCovered[i] - 1]);
+			compiledDataWait.push(waitTimes[waitTimesIndices[i] - 1]);
+		}
 	}
 
-	if(unknownCheck == 1) {
-		compiledDataCheck.push("Unknown checkpoint");
-		compiledDataWait.push(waitTimes[unknownWait - 1]);
-	} 
+	console.log(checkpointsCovered);
+	console.log(waitTimesIndices);
+	console.log(compiledExtraChecks);
+	console.log(extraWaitIndices);
 
 	var changingTimes = isChanging(checkpointsCovered, waitTimesIndices, compiledExtraChecks, extraWaitIndices);
 
-	//console.log(changingTimes);
-
-	//console.log(compiledDataCheck);
-	//console.log(compiledDataWait);
-	createTable(compiledDataCheck, compiledDataWait, changingTimes);
+	createTable(compiledDataCheck, compiledDataWait, updateWaitTimes, changingTimes);
 	//END GETTING DATA
 
   </script>
+  <p style="font-size: 0.7em; top: 15vh; left: 29vw; max-width: 50vw; position: relative;">Note: order of checkpoints comes from update time</p>
 
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
