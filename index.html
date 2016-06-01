@@ -192,12 +192,7 @@
 			compiledDataWait.push(waitTimes[waitTimesIndices[i] - 1]);
 		}
 	}
-
-	console.log(checkpointsCovered);
-	console.log(waitTimesIndices);
-	console.log(compiledExtraChecks);
-	console.log(extraWaitIndices);
-
+	
 	var changingTimes = isChanging(checkpointsCovered, waitTimesIndices, compiledExtraChecks, extraWaitIndices);
 
 	createTable(compiledDataCheck, compiledDataWait, updateWaitTimes, changingTimes);
