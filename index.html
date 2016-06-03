@@ -3,7 +3,8 @@
 <html manifest="index.appcache">
   <title>Airport Data</title>
   <link rel="stylesheet" type="text/css" href="airports.css">
-  <p style="font-size: 30pt; text-align: center; top: 25vh; left: 25vw; max-width: 50vw; position: relative;" id="airport"></p>
+  <p style="font-size: 30pt; text-align: center; top: 25vh; left: 25.25vw; max-width: 50vw; position: relative;" id="airport"></p>
+  <p style="font-size: 0.7em; top: 46vh; left: 29vw; max-width: 50vw; position: relative;" id ="note"></p>
   <p style="font-size: 10pt; bottom: 0vh; left: 2vh; position: absolute">If a checkpoint is missing, it is due to a lack of or faulty data provided by the TSA</p>
   
   <form id="frm1" action="form_action.asp">
@@ -15,16 +16,11 @@
   <!-- <script src="jquery.min.js"></script> -->
 
   <script>
-  	//START OF CHOOSING AIPORT
-	var inputID = "ATL";
+  	//START OF CHOOSING AIRPORT
+	var inputID = "MSY";
 
-	//function getID() { 
-	//	inputID = document.getElementById("input").value;
-	//}
-  	/*$('input[name="letterCode"]').change(function() {
-		inputID = $('input[name="email"]').value;
-	}); */
-	//console.log(inputID);
+
+	//END OF CHOOSING AIRPORT
 
   	//START SETUP OF VARIABLES AND FILES
     var data, allAirports, waiting, inputIndex, checkpointID, airportNameStart, airportNameEnd, airportName; 
@@ -41,8 +37,23 @@
   	xhttp.open("GET", "apcp.xml", false); //false makes it not asynchronous
   	xhttp.send();
   	allAirports = xhttp.responseXML; 
+  	//END FIRST SETUP
 
-	var url = "http://apps.tsa.dhs.gov/MyTSAWebService/GetWaitTimes.ashx?ap=ATL"
+  	//START AIRPORT NAME (this section was moved up here so that even with no data, the airport name will be displayed)
+  	var airportList = allAirports.getElementsByTagName("airport");
+	
+  	for(var i = 0; i < airportList.length; i++) {
+  		if(airportList[i].childNodes[1].innerHTML == inputID) {
+  			$("#airport").html(airportList[i].childNodes[0].innerHTML);
+  	  			for(var j = 0; j < airportList[i].getElementsByTagName("checkpoints")[0].getElementsByTagName("checkpoint").length; j++) {
+  					checkpointNames.push(airportList[i].getElementsByTagName("checkpoints")[0].getElementsByTagName("checkpoint")[j].childNodes[1].innerHTML);		
+  				}
+  		}
+  	} 
+  	//END AIRPORT NAME
+
+  	//START SETUP OF VARIABLES AND FILES
+	var url = "http://apps.tsa.dhs.gov/MyTSAWebService/GetWaitTimes.ashx?ap=" + inputID;
     url = 'http://query.yahooapis.com/v1/public/yql?q=' + encodeURIComponent('select * from html where url="' + url + '"') + '&format=xml';
     $.ajax({
         type: "GET",
@@ -57,15 +68,20 @@
         dataType: "text"
 	});
 
+	$("#note").html("Note: order of checkpoints comes from update time");
+
+	if(data.length > 280 && data.length < 310) {
+		alert("NO DATA FOR THIS AIRPORT!");
+		$("#note").html("NO DATA AVAILABLE");
+	}
+
 	var firstConvertIndex = data.indexOf("documentelement");
 	var secondConvertIndex = data.indexOf("documentelement", firstConvertIndex + 1);
 	data = data.substring(firstConvertIndex - 1, secondConvertIndex + 16);
 	waiting = jQuery.parseXML(data);
-	waiting = waiting.getElementsByTagName("documentelement");
-	console.log(waiting);
-
+	waiting = waiting.getElementsByTagName("documentelement")[0].getElementsByTagName("waittimes");
   	//END SETUP OF VARIABLES AND FILES
-    /*
+  
   	//START CREATING FUNCTIONS TO ORGANIZE CODE
   	function createTable(checkpoints, waitingTimes, updateTimes, changes) {
   		var body = document.getElementsByTagName('body')[0];
@@ -141,17 +157,6 @@
   	//END CREATING FUNCTIONS TO ORGANIZE CODE
 
   	//START GETTING DATA
-  	var airportList = allAirports.getElementsByTagName("airport");
-	
-  	for(var i = 0; i < airportList.length; i++) {
-  		if(airportList[i].childNodes[1].innerHTML == inputID) {
-  			$("#airport").html(airportList[i].childNodes[0].innerHTML);
-  	  			for(var j = 0; j < airportList[i].getElementsByTagName("checkpoints")[0].getElementsByTagName("checkpoint").length; j++) {
-  					checkpointNames.push(airportList[i].getElementsByTagName("checkpoints")[0].getElementsByTagName("checkpoint")[j].childNodes[1].innerHTML);		
-  				}
-  		}
-  	} 
-
   	var compiledDataCheck = [], compiledDataWait = [];
   	var unknownCheck = 0, unknownWait; //for unknown checkpoints
   	var compiledExtraChecks = [], extraWaitIndices = [], coveredExtras = [];
@@ -211,11 +216,11 @@
 	var changingTimes = isChanging(checkpointsCovered, waitTimesIndices, compiledExtraChecks, extraWaitIndices);
 
 	createTable(compiledDataCheck, compiledDataWait, updateWaitTimes, changingTimes);
-	//END GETTING DATA   */
+	//END GETTING DATA 
 
   </script>
   <div data-role="page" id="home">
-  <p style="font-size: 0.7em; top: 15vh; left: 29vw; max-width: 50vw; position: relative;">Note: order of checkpoints comes from update time</p>
+  <p style="font-size: 0.7em; top: 15vh; left: 29vw; max-width: 50vw; position: relative;" id ="note"></p>
 
 </html>
 
