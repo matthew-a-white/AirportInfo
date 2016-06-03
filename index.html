@@ -8,9 +8,9 @@
   <p style="font-size: 10pt; bottom: 0vh; left: 2vh; position: absolute">If a checkpoint is missing, it is due to a lack of or faulty data provided by the TSA</p>
   
   <form id="frm1" action="form_action.asp">
-    3 letter code: <input type="text" name="input">
+    3 letter code: <input type="text" name="input" id="inputBox">
   </form> 
-  <button onclick="getID()">Submit</button>
+  <button onclick="getID()" id="button">Submit</button>
   
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
   <!-- <script src="jquery.min.js"></script> -->
@@ -21,6 +21,12 @@
 
   	//START OF CHOOSING AIRPORT
   	var inputID, airportIncluded = false, removeTable = false;
+
+  	$("#inputBox").keyup(function(event){
+	    if(event.keyCode == 13){
+	        $("#button").click();
+	    }
+	});
 
 	function getID() {
 		airportIncluded = true;
