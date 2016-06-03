@@ -1,15 +1,54 @@
 body { 
-	background-color: #E2E3E5; 
+	background-color: #7EAAC4; 
 }
 
 table {
     border-collapse: collapse;
     width: 45%;
-    position: relative;
-    top: 27.5vh;
-    left: 28.5vw;
+    position: absolute;
+    top: 38vh;
+    left: 30vw;
     border-style: hidden;
     border-radius: 25px;
+}
+
+/* .ui-dialog .ui-dialog-content {
+    position: relative;
+    border: 0;
+    padding: .5em 1em;
+    background-color: blue;
+    overflow: auto;
+} 
+*/
+
+
+#button {
+    background-color: #D8865D;
+    float: #009900;
+    border: none;
+    color: white;
+    padding: 5px 13px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    -webkit-transition-duration: 0.4s; /* Safari */
+    transition-duration: 0.4s;
+    border-radius: 6px;
+}
+
+#button:hover {
+    background-color: #D14803;
+}
+
+#inputBox {
+    background-color: #7EAAC4;
+    width: 7vw;
+    font-size: 1em;
+    text-align: center;
+    color: white;
+    border: none;
+    border-bottom: 4px solid #04659D;
 }
 
 table td, table th {
@@ -17,8 +56,8 @@ table td, table th {
 }
 
 th {
-	background-color: #4CAF50;
-    color: white;
+	background-color: #04659D;
+    color: #D8865D;
 }
 
 th, td {
@@ -52,19 +91,6 @@ tr:last-child td:first-child {
 tr:last-child td:last-child {
     border-radius: 0 0 10px 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
