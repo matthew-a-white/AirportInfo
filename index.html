@@ -12,7 +12,6 @@
   <button onclick="getID()">Submit</button>
   
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
-  <script src="https://www.promisejs.org/polyfills/promise-done-7.0.4.min.js"></script>
   <!-- <script src="jquery.min.js"></script> -->
 
   <script>
@@ -28,7 +27,7 @@
 	//console.log(inputID);
 
   	//START SETUP OF VARIABLES AND FILES
-    var data = null, allAirports, waiting, inputIndex, checkpointID, airportNameStart, airportNameEnd, airportName; 
+    var data, allAirports, waiting, inputIndex, checkpointID, airportNameStart, airportNameEnd, airportName; 
     var nextAirportIndex, checkpointIndexStart, checkpointIndexEnd;
     var checkpointNames = [];
 
@@ -43,35 +42,30 @@
   	xhttp.send();
   	allAirports = xhttp.responseXML; 
 
-    function jsonLoader(){
-    	var myXML;
-		$.ajax({
-		    url: 'http://apps.tsa.dhs.gov/MyTSAWebService/GetWaitTimes.ashx?ap=ATL&output=json',
-		    dataType: "json",
-		    type: 'GET',
-		    async: false,
-		    success: function(res) {
-				data = res;
-		    }
-		});
-	} 
+	var url = "http://apps.tsa.dhs.gov/MyTSAWebService/GetWaitTimes.ashx?ap=ATL"
+    url = 'http://query.yahooapis.com/v1/public/yql?q=' + encodeURIComponent('select * from html where url="' + url + '"') + '&format=xml';
+    $.ajax({
+        type: "GET",
+        url: url,
+        async: false,
+        success: function(text){
+            data = text;
+        },
+        error: function(){
+            alert("Error with YQL");
+        },
+        dataType: "text"
+	});
 
- 	function checkVariable()
-	{
-    	if ( data != null ) {
-            return data.WaitTimes;
-    	}
-    	else
-    	{
-            window.setTimeout("checkVariable();", 10);
-    	}
-	} 
-
-	jsonLoader();
-	waiting = checkVariable();
+	var firstConvertIndex = data.indexOf("documentelement");
+	var secondConvertIndex = data.indexOf("documentelement", firstConvertIndex + 1);
+	data = data.substring(firstConvertIndex - 1, secondConvertIndex + 16);
+	waiting = jQuery.parseXML(data);
+	waiting = waiting.getElementsByTagName("documentelement");
+	console.log(waiting);
 
   	//END SETUP OF VARIABLES AND FILES
-    
+    /*
   	//START CREATING FUNCTIONS TO ORGANIZE CODE
   	function createTable(checkpoints, waitingTimes, updateTimes, changes) {
   		var body = document.getElementsByTagName('body')[0];
@@ -166,41 +160,39 @@
   	var extraZeroCheck = false;
      
 	for(var i = 0; i < waiting.length; i++) {  //waiting is list of all WaitTimes nodes
-		if(compiledExtraChecks.indexOf(waiting[i].CheckpointIndex) < 0) {
-			if(checkpointsCovered.indexOf(waiting[i].CheckpointIndex) > -1) {
-				compiledExtraChecks.push(waiting[i].CheckpointIndex);
-				extraWaitIndices.push(waiting[i].WaitTimeIndex);
+		if(compiledExtraChecks.indexOf(waiting[i].childNodes[0].innerHTML) < 0) {
+			if(checkpointsCovered.indexOf(waiting[i].childNodes[0].innerHTML) > -1) {
+				compiledExtraChecks.push(waiting[i].childNodes[0].innerHTML);
+				extraWaitIndices.push(waiting[i].childNodes[1].innerHTML);
 			} 
 		}
 
-		if(checkpointsCovered.indexOf(waiting[i].CheckpointIndex) < 0 && waiting[i].CheckpointIndex != 0) {
-			checkpointsCovered.push(waiting[i].CheckpointIndex);
-			waitTimesIndices.push(waiting[i].WaitTimeIndex);
+		if(checkpointsCovered.indexOf(waiting[i].childNodes[0].innerHTML) < 0 && waiting[i].childNodes[0].innerHTML != 0) {
+			checkpointsCovered.push(waiting[i].childNodes[0].innerHTML);
+			waitTimesIndices.push(waiting[i].childNodes[1].innerHTML);
 			counter++;
 
 			//FOR FINDING THE DATE
-			unparsedUpdate = waiting[i].Created_Datetime;
-			/*tIndex = unparsedUpdate.indexOf("T");
+			unparsedUpdate = waiting[i].childNodes[2].innerHTML;
+			tIndex = unparsedUpdate.indexOf("T");
 			endUpdateIndex = unparsedUpdate.indexOf("-04:00");
 			date = unparsedUpdate.substring(0, tIndex);
 			specificTime = unparsedUpdate.substring(tIndex + 1, endUpdateIndex);
-			updateWaitTimes.push(date + " at " + specificTime); */
-			updateWaitTimes.push(unparsedUpdate);
-		} else if(indexOfUnknown == -1 && waiting[i].CheckpointIndex == 0) {
+			updateWaitTimes.push(date + " at " + specificTime); 
+		} else if(indexOfUnknown == -1 && waiting[i].childNodes[0].innerHTML == 0) {
 			checkpointsCovered.push("0");
-			waitTimesIndices.push(waiting[i].WaitTimeIndex);
+			waitTimesIndices.push(waiting[i].childNodes[1].innerHTML);
 			indexOfUnknown = counter;
-			unknownWait = waiting[i].WaitTimeIndex;
+			unknownWait = waiting[i].childNodes[1].innerHTML; //this seems repetitive with code two lines above ***************
 
 			//FOR FINDING THE DATE
-			unparsedUpdate = waiting[i].Created_Datetime;
-			/*tIndex = unparsedUpdate.indexOf("T");
+			unparsedUpdate = waiting[i].childNodes[2].innerHTML;
+			tIndex = unparsedUpdate.indexOf("T");
 			endUpdateIndex = unparsedUpdate.indexOf("-04:00");
 			date = unparsedUpdate.substring(0, tIndex);
 			specificTime = unparsedUpdate.substring(tIndex + 1, endUpdateIndex);
 			unknownUpdateTime = date + " at " + specificTime;
-			updateWaitTimes.push(unknownUpdateTime); */
-			updateWaitTimes.push(unparsedUpdate);
+			updateWaitTimes.push(unknownUpdateTime);
 		}
 	}
 
@@ -219,7 +211,7 @@
 	var changingTimes = isChanging(checkpointsCovered, waitTimesIndices, compiledExtraChecks, extraWaitIndices);
 
 	createTable(compiledDataCheck, compiledDataWait, updateWaitTimes, changingTimes);
-	//END GETTING DATA
+	//END GETTING DATA   */
 
   </script>
   <div data-role="page" id="home">
