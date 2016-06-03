@@ -8,7 +8,7 @@
   <p style="font-size: 10pt; bottom: 0vh; left: 2vh; position: absolute">If a checkpoint is missing, it is due to a lack of or faulty data provided by the TSA</p>
   
   <form id="frm1" action="form_action.asp">
-    3 letter code: <input type="text" id="input" >
+    3 letter code: <input type="text" name="input">
   </form> 
   <button onclick="getID()">Submit</button>
   
@@ -16,19 +16,33 @@
   <!-- <script src="jquery.min.js"></script> -->
 
   <script>
-  	//START OF CHOOSING AIRPORT
-	var inputID = "MSY";
+  	//FIRST INSTRUCTION
+  	alert("Start by entering the 3 letter airport code");
 
+  	//START OF CHOOSING AIRPORT
+  	var inputID, airportIncluded = false, removeTable = false;
+
+	function getID() {
+		airportIncluded = true;
+		inputID = document.getElementsByName("input")[0].value;
+		if(inputID.length !== 3) 
+			alert("Please enter a valid aiport code");
+
+		if(removeTable) {
+			tbl.remove();
+			tblBody.remove();
+		}
+		main(inputID);
+	}
 
 	//END OF CHOOSING AIRPORT
 
   	//START SETUP OF VARIABLES AND FILES
-    var data, allAirports, waiting, inputIndex, checkpointID, airportNameStart, airportNameEnd, airportName; 
+    var data, allAirports, waiting, inputIndex, checkpointID; 
     var nextAirportIndex, checkpointIndexStart, checkpointIndexEnd;
     var checkpointNames = [];
 
     var waitTimes = ["No wait", "1-10 min", "11-20 min", "21-30 min", "31+ min"];
-    var infoAddress = "http://apps.tsa.dhs.gov/MyTSAWebService/GetWaitTimes.ashx?ap=" + inputID;
   	var checkpointsCovered = [];
   	var waitTimesIndices = [];
   	var updateWaitTimes = [];
@@ -40,53 +54,74 @@
   	//END FIRST SETUP
 
   	//START AIRPORT NAME (this section was moved up here so that even with no data, the airport name will be displayed)
-  	var airportList = allAirports.getElementsByTagName("airport");
-	
-  	for(var i = 0; i < airportList.length; i++) {
-  		if(airportList[i].childNodes[1].innerHTML == inputID) {
-  			$("#airport").html(airportList[i].childNodes[0].innerHTML);
-  	  			for(var j = 0; j < airportList[i].getElementsByTagName("checkpoints")[0].getElementsByTagName("checkpoint").length; j++) {
-  					checkpointNames.push(airportList[i].getElementsByTagName("checkpoints")[0].getElementsByTagName("checkpoint")[j].childNodes[1].innerHTML);		
-  				}
-  		}
-  	} 
+  	
+  	function getAirport(id) {
+  		id = id.toUpperCase();
+
+	  	var airportList = allAirports.getElementsByTagName("airport");
+			var airportName;
+		  	for(var i = 0; i < airportList.length; i++) {
+		  		if(airportList[i].childNodes[1].innerHTML == id) {
+		  			airportName = airportList[i].childNodes[0].innerHTML;
+		  			$("#airport").html(airportList[i].childNodes[0].innerHTML);
+		  	  			for(var j = 0; j < airportList[i].getElementsByTagName("checkpoints")[0].getElementsByTagName("checkpoint").length; j++) {
+		  					checkpointNames.push(airportList[i].getElementsByTagName("checkpoints")[0].getElementsByTagName("checkpoint")[j].childNodes[1].innerHTML);		
+		  				}
+		  		}
+		  	} 
+
+	  	if(airportName === undefined && id.length === 3) {
+	  		alert("Please enter a valid airport code");
+	  		return false;
+	  	}
+	  	return true;
+  	}
   	//END AIRPORT NAME
 
   	//START SETUP OF VARIABLES AND FILES
-	var url = "http://apps.tsa.dhs.gov/MyTSAWebService/GetWaitTimes.ashx?ap=" + inputID;
-    url = 'http://query.yahooapis.com/v1/public/yql?q=' + encodeURIComponent('select * from html where url="' + url + '"') + '&format=xml';
-    $.ajax({
-        type: "GET",
-        url: url,
-        async: false,
-        success: function(text){
-            data = text;
-        },
-        error: function(){
-            alert("Error with YQL");
-        },
-        dataType: "text"
-	});
+  	function ajaxRequest(id) {
+		var url = "http://apps.tsa.dhs.gov/MyTSAWebService/GetWaitTimes.ashx?ap=" + id;
+	    url = 'http://query.yahooapis.com/v1/public/yql?q=' + encodeURIComponent('select * from html where url="' + url + '"') + '&format=xml';
+	    $.ajax({
+	        type: "GET",
+	        url: url,
+	        async: false,
+	        success: function(text){
+	            data = text;
+	        },
+	        error: function(){
+	            alert("Error with YQL");
+	        },
+	        dataType: "text"
+		});
 
-	$("#note").html("Note: order of checkpoints comes from update time");
+		$("#note").html("Note: order of checkpoints comes from update time");
 
-	if(data.length > 280 && data.length < 310) {
-		alert("NO DATA FOR THIS AIRPORT!");
-		$("#note").html("NO DATA AVAILABLE");
+		if(data.length < 310 && airportIncluded) {
+			alert("NO DATA AVAILABLE");
+			$("#note").html("");
+		}
+
+		var firstConvertIndex = data.indexOf("documentelement");
+		var secondConvertIndex = data.indexOf("documentelement", firstConvertIndex + 1);
+		data = data.substring(firstConvertIndex - 1, secondConvertIndex + 16);
+		waiting = jQuery.parseXML(data);
+		waiting = waiting.getElementsByTagName("documentelement")[0].getElementsByTagName("waittimes");
 	}
-
-	var firstConvertIndex = data.indexOf("documentelement");
-	var secondConvertIndex = data.indexOf("documentelement", firstConvertIndex + 1);
-	data = data.substring(firstConvertIndex - 1, secondConvertIndex + 16);
-	waiting = jQuery.parseXML(data);
-	waiting = waiting.getElementsByTagName("documentelement")[0].getElementsByTagName("waittimes");
   	//END SETUP OF VARIABLES AND FILES
   
   	//START CREATING FUNCTIONS TO ORGANIZE CODE
+  	var body, tbl, tblBody;
+
   	function createTable(checkpoints, waitingTimes, updateTimes, changes) {
-  		var body = document.getElementsByTagName('body')[0];
- 		var tbl = document.createElement("table");
- 		var tblBody = document.createElement("tbody");
+  		removeTable = true;
+  		body = document.getElementsByTagName('body')[0];
+ 		tbl = document.createElement("table");
+ 		tblBody = document.createElement("tbody");
+
+ 		if(checkpoints > 0) {
+ 			removeTable = true;
+ 		}
 
   		for(var i = 0; i < checkpoints.length + 1; i++) {
   			var row = document.createElement("tr");
@@ -164,59 +199,80 @@
   	var date, specificTime, unknownUpdateTime, indexOfUnknown = -1, counter = 0;
   	var extraZeroCheck = false;
      
-	for(var i = 0; i < waiting.length; i++) {  //waiting is list of all WaitTimes nodes
-		if(compiledExtraChecks.indexOf(waiting[i].childNodes[0].innerHTML) < 0) {
-			if(checkpointsCovered.indexOf(waiting[i].childNodes[0].innerHTML) > -1) {
-				compiledExtraChecks.push(waiting[i].childNodes[0].innerHTML);
-				extraWaitIndices.push(waiting[i].childNodes[1].innerHTML);
-			} 
+    function compileData() {
+		for(var i = 0; i < waiting.length; i++) {  //waiting is list of all WaitTimes nodes
+			if(compiledExtraChecks.indexOf(waiting[i].childNodes[0].innerHTML) < 0) {
+				if(checkpointsCovered.indexOf(waiting[i].childNodes[0].innerHTML) > -1) {
+					compiledExtraChecks.push(waiting[i].childNodes[0].innerHTML);
+					extraWaitIndices.push(waiting[i].childNodes[1].innerHTML);
+				} 
+			}
+
+			if(checkpointsCovered.indexOf(waiting[i].childNodes[0].innerHTML) < 0 && waiting[i].childNodes[0].innerHTML != 0) {
+				checkpointsCovered.push(waiting[i].childNodes[0].innerHTML);
+				waitTimesIndices.push(waiting[i].childNodes[1].innerHTML);
+				counter++;
+
+				//FOR FINDING THE DATE
+				unparsedUpdate = waiting[i].childNodes[2].innerHTML;
+				tIndex = unparsedUpdate.indexOf("T");
+				endUpdateIndex = unparsedUpdate.indexOf("-04:00");
+				date = unparsedUpdate.substring(0, tIndex);
+				specificTime = unparsedUpdate.substring(tIndex + 1, endUpdateIndex);
+				updateWaitTimes.push(date + " at " + specificTime); 
+			} else if(indexOfUnknown == -1 && waiting[i].childNodes[0].innerHTML == 0) {
+				checkpointsCovered.push("0");
+				waitTimesIndices.push(waiting[i].childNodes[1].innerHTML);
+				indexOfUnknown = counter;
+				unknownWait = waiting[i].childNodes[1].innerHTML;
+
+				//FOR FINDING THE DATE
+				unparsedUpdate = waiting[i].childNodes[2].innerHTML;
+				tIndex = unparsedUpdate.indexOf("T");
+				endUpdateIndex = unparsedUpdate.indexOf("-04:00");
+				date = unparsedUpdate.substring(0, tIndex);
+				specificTime = unparsedUpdate.substring(tIndex + 1, endUpdateIndex);
+				unknownUpdateTime = date + " at " + specificTime;
+				updateWaitTimes.push(unknownUpdateTime);
+			}
 		}
 
-		if(checkpointsCovered.indexOf(waiting[i].childNodes[0].innerHTML) < 0 && waiting[i].childNodes[0].innerHTML != 0) {
-			checkpointsCovered.push(waiting[i].childNodes[0].innerHTML);
-			waitTimesIndices.push(waiting[i].childNodes[1].innerHTML);
-			counter++;
+		for(var i = 0; i < checkpointsCovered.length; i++) {
+			if(i == indexOfUnknown) {
+				compiledDataCheck.push("Unknown checkpoint");
+				compiledDataWait.push(waitTimes[unknownWait - 1]);
+			}
 
-			//FOR FINDING THE DATE
-			unparsedUpdate = waiting[i].childNodes[2].innerHTML;
-			tIndex = unparsedUpdate.indexOf("T");
-			endUpdateIndex = unparsedUpdate.indexOf("-04:00");
-			date = unparsedUpdate.substring(0, tIndex);
-			specificTime = unparsedUpdate.substring(tIndex + 1, endUpdateIndex);
-			updateWaitTimes.push(date + " at " + specificTime); 
-		} else if(indexOfUnknown == -1 && waiting[i].childNodes[0].innerHTML == 0) {
-			checkpointsCovered.push("0");
-			waitTimesIndices.push(waiting[i].childNodes[1].innerHTML);
-			indexOfUnknown = counter;
-			unknownWait = waiting[i].childNodes[1].innerHTML; //this seems repetitive with code two lines above ***************
-
-			//FOR FINDING THE DATE
-			unparsedUpdate = waiting[i].childNodes[2].innerHTML;
-			tIndex = unparsedUpdate.indexOf("T");
-			endUpdateIndex = unparsedUpdate.indexOf("-04:00");
-			date = unparsedUpdate.substring(0, tIndex);
-			specificTime = unparsedUpdate.substring(tIndex + 1, endUpdateIndex);
-			unknownUpdateTime = date + " at " + specificTime;
-			updateWaitTimes.push(unknownUpdateTime);
+			if(checkpointsCovered[i] != 0) {
+				compiledDataCheck.push(checkpointNames[checkpointsCovered[i] - 1]);
+				compiledDataWait.push(waitTimes[waitTimesIndices[i] - 1]);
+			}
 		}
+
+		var changingTimes = isChanging(checkpointsCovered, waitTimesIndices, compiledExtraChecks, extraWaitIndices);
+
+		createTable(compiledDataCheck, compiledDataWait, updateWaitTimes, changingTimes);
 	}
-
-	for(var i = 0; i < checkpointsCovered.length; i++) {
-		if(i == indexOfUnknown) {
-			compiledDataCheck.push("Unknown checkpoint");
-			compiledDataWait.push(waitTimes[unknownWait - 1]);
-		}
-
-		if(checkpointsCovered[i] != 0) {
-			compiledDataCheck.push(checkpointNames[checkpointsCovered[i] - 1]);
-			compiledDataWait.push(waitTimes[waitTimesIndices[i] - 1]);
-		}
-	}
-
-	var changingTimes = isChanging(checkpointsCovered, waitTimesIndices, compiledExtraChecks, extraWaitIndices);
-
-	createTable(compiledDataCheck, compiledDataWait, updateWaitTimes, changingTimes);
 	//END GETTING DATA 
+
+	//START RESET FUNCTION
+
+	function removeData() {
+		//tbl.remove();
+		//tblBody.remove();
+		checkpointsCovered = [], waitTimesIndice = [], compiledExtraChecks = [], extraWaitIndices = [], compiledDataCheck = [], compiledDataWait = [], updateWaitTimes = [], changingTimes = [];
+		airportIncluded = false;
+	}
+
+	//END RESET FUNCTION
+
+	function main(id) {
+		if(getAirport(id)) {
+			ajaxRequest(id);
+			compileData();
+			removeData();
+		}
+	}
 
   </script>
   <div data-role="page" id="home">
