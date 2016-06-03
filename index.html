@@ -72,6 +72,8 @@
 
 	  	if(airportName === undefined && id.length === 3) {
 	  		alert("Please enter a valid airport code");
+	  		$("#airport").html("");
+	  		$("#note").html("");
 	  		return false;
 	  	}
 	  	return true;
