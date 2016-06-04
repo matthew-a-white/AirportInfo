@@ -14,7 +14,7 @@
 		<p style="font-size: 0.7em; top: 48vh; left: 27.7vw; position: relative;" id ="note"></p>
 		<p style="font-size: 10pt; bottom: 0vh; left: 2vh; position: absolute">If a checkpoint is missing, it is due to a lack of or faulty data provided by the TSA</p>
 		<p style="left: 1vw; top: 2vh; text-align: center; position: absolute; color: white;">Airport code:</p>
-		<input type="text" name="input" id="inputBox" style="left: 1vw; top: 7vh; position: absolute;">
+		<input type="text" name="input" id="inputBox" style="left: 1vw; top: 7vh; position: absolute;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
 		<button onclick="getID()" id="button" style="left: 0.8vw; top: 11vh; position: absolute;">Submit  ></button>
 
 	  	<script>
@@ -51,13 +51,12 @@
 				        $("#button").click();
 				    }
 				});
-			});
+			}); 
 	  		
 		  	//START OF CHOOSING AIRPORT
-		  	var inputID, airportIncluded = false, removeTable = false;
+		  	var inputID, removeTable = false;
 
 			function getID() {
-				airportIncluded = true;
 				inputID = document.getElementsByName("input")[0].value;
 				inputID = inputID.trim();
 
@@ -84,6 +83,12 @@
 		  	allAirports = xhttp.responseXML; 
 		  	//END FIRST SETUP
 
+		  	//BUG FIX (getID() was executed twice after pressing enter when first inputting an airport code that has no data or is wrong)
+		  	function alertCallback(message, callback) {
+		  		alert(message);
+		  		callback();
+		  	}
+
 		  	//START AIRPORT NAME (this section was moved up here so that even with no data, the airport name will be displayed)
 		  	function getAirport(id) {
 		  		id = id.toUpperCase();
@@ -101,7 +106,9 @@
 				  	} 
 
 			  	if(airportName === undefined) {
-			  		alert("Please enter a valid airport code");
+			  		alertCallback("Please enter a valid airport code", function() {
+			  			$("#inputBox").blur();
+			  		});
 			  		$("#airport").html("");
 			  		$("#note").html("");
 			  		return false;
@@ -129,8 +136,10 @@
 
 				$("#note").html("Note: order of checkpoints comes from update time");
 
-				if(data.length < 310 && airportIncluded) {
-					alert("NO DATA AVAILABLE");
+				if(data.length < 310) {
+					alertCallback("NO DATA AVAILABLE", function() {
+						$("#inputBox").blur();
+					});
 					$("#note").html("");
 				}
 
@@ -279,6 +288,10 @@
 				var changingTimes = isChanging(checkpointsCovered, waitTimesIndices, compiledExtraChecks, extraWaitIndices);
 
 				createTable(compiledDataCheck, compiledDataWait, updateWaitTimes, changingTimes);
+
+				var tableHeight = tbl.offsetHeight;
+				var notePositionTop = tableHeight + 150;
+				$("#note").css("top", notePositionTop);
 			}
 			//END GETTING DATA 
 
@@ -286,7 +299,7 @@
 			function removeData() {
 				checkpointsCovered = [], waitTimesIndices = [], compiledExtraChecks = [], extraWaitIndices = [], compiledDataCheck = [], compiledDataWait = [], updateWaitTimes = [], changingTimes = [], checkpointNames = []; //reset arrays
 
-				airportIncluded = false, inputID = null, unknownWait = 0, indexOfUnknown = -1, counter = 0, unparsedUpdate = "", tIndex = -1, endUpdateIndex = -1, date = "", specificTime = "";  //reset variables
+				inputID = null, unknownWait = 0, indexOfUnknown = -1, counter = 0, unparsedUpdate = "", tIndex = -1, endUpdateIndex = -1, date = "", specificTime = "";  //reset variables
 			}
 
 			//COMPILATION OF FUNCTIONS
@@ -299,7 +312,8 @@
 			}   
 			
 	  	</script>
-	  	<div id="dialog" class="ui-dialog-content" title="Instructions">
+
+	  	<div id="dialog" title="Instructions"> <!-- took out     class="ui-dialog-content"      -->
 			<p id="dialogContentText" style="visibility: hidden">Start by entering a 3 letter airport code. Do you wish to receive this message again?</p>
 		</div> 
 	</body>
