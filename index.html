@@ -21,26 +21,29 @@
 	  	<script>
 
 	  		//FIRST INSTRUCTION AND COOKIES
-	  		$(function() {			//equivalent to $( document ).ready(function() {
+	  		$(function() {			//equivalent to $(document).ready(function() {
 	  			if(Cookies.get('getInstructions') == 'yes' || Cookies.get('getInstructions') == undefined) {
 	  				$("#dialogContentText").css("visibility", "visible");
 				    $("#dialog").dialog({
-				      resizable: true,
-				      height: 200,
-				      width: 500,
-				      modal: false,
-				      draggable: true,
-				      dialogClass: "instructions success-dialog",
-				      buttons: {
-				        "Yes": function() {
-				          $(this).dialog("close");
-				          Cookies.set('getInstructions', 'yes')
-				        },
-				        "No": function() {
-				          $(this).dialog("close");
-				          Cookies.set('getInstructions', 'no');
-				        }
-				      }
+						resizable: true,
+						height: 'auto',
+						width: 500,
+						modal: false,
+						draggable: true,
+						open: function (event, ui) {
+							$('#dialog').css('overflow', 'hidden'); //this line does the actual hiding
+						},
+						dialogClass: "instructions success-dialog",
+						buttons: {
+						"Yes": function() {
+						  $(this).dialog("close");
+						  Cookies.set('getInstructions', 'yes');
+						},
+						"No": function() {
+						  $(this).dialog("close");
+						  Cookies.set('getInstructions', 'no');
+						}
+						}
 				    });
 				}
 			 });  
@@ -52,7 +55,13 @@
 				        $("#button").click();
 				    }
 				});
-			}); 
+			});
+
+			//FOR EASY ACCESS TO INPUT
+			$(function() {
+				if(Cookies.get('getInstructions') ==='no')
+					$("#inputBox").select();
+			});
 	  		
 		  	//START OF CHOOSING AIRPORT
 		  	var inputID, removeTable = false;
@@ -77,6 +86,7 @@
 		  	var checkpointsCovered = [];
 		  	var waitTimesIndices = [];
 		  	var updateWaitTimes = [];
+		  	var utcTime; //used for putting update times in the airport's local time
 
 		  	var xhttp = new XMLHttpRequest();
 		  	xhttp.open("GET", "apcp.xml", false); //false makes it not asynchronous
@@ -85,6 +95,8 @@
 		  	//END FIRST SETUP
 
 		  	//BUG FIX (getID() was executed twice after pressing enter when first inputting an airport code that has no data or is wrong)
+		  	var alertNormal = false;
+
 		  	function alertCallback(message, callback) {
 		  		alert(message);
 		  		callback();
@@ -99,7 +111,8 @@
 				  	for(var i = 0; i < airportList.length; i++) {
 				  		if(airportList[i].childNodes[1].innerHTML == id) {
 				  			airportName = airportList[i].childNodes[0].innerHTML;
-				  			$("#airport").html(airportList[i].childNodes[0].innerHTML);
+				  			$("#airport").html(airportName);
+				  			utcTime = airportList[i].childNodes[6].innerHTML;
 			  	  			for(var j = 0; j < airportList[i].getElementsByTagName("checkpoints")[0].getElementsByTagName("checkpoint").length; j++) {
 			  					checkpointNames.push(airportList[i].getElementsByTagName("checkpoints")[0].getElementsByTagName("checkpoint")[j].childNodes[1].innerHTML);		
 			  				}
@@ -135,12 +148,12 @@
 			        dataType: "text"
 				});
 
-				$("#note").html("Note: order of checkpoints comes from update time");
+				$("#note").html("Note: order of checkpoints comes from update time in the airport's local time");
 
 				if(data.length < 310) {
-					alertCallback("NO DATA AVAILABLE", function() {
-						$("#inputBox").blur();
-					});
+				  	alertCallback("NO DATA AVAILABLE", function() {
+				  		$("#inputBox").blur();
+				  	});
 					$("#note").html("");
 				}
 
@@ -150,7 +163,7 @@
 				waiting = jQuery.parseXML(data);
 				waiting = waiting.getElementsByTagName("documentelement")[0].getElementsByTagName("waittimes");
 			}
-		  	//END SETUP OF VARIABLES AND FILES
+		  	//END SETUP OF VARIABLES AND FILES 
 		  
 		  	//START CREATING FUNCTIONS TO ORGANIZE CODE
 		  	var body, tbl, tblBody;
@@ -235,7 +248,7 @@
 		  	var compiledDataCheck = [], compiledDataWait = [];
 		  	var unknownWait, indexOfUnknown = -1, counter = 0; //for unknown checkpoints
 		  	var compiledExtraChecks = [], extraWaitIndices = [];
-		  	var unparsedUpdate, tIndex, endUpdateIndex, date, specificTime;  //for update times section of table
+		  	var unparsedUpdate, tIndex, endUpdateIndex, date, specificTime, specificHourString, specificHourInt, timeChange, utcTimeInt;  //for update times section of table
 		     
 		    function compileData() {
 				for(var i = 0; i < waiting.length; i++) {  //waiting is list of all WaitTimes nodes
@@ -256,8 +269,16 @@
 						tIndex = unparsedUpdate.indexOf("T");
 						endUpdateIndex = unparsedUpdate.indexOf("-04:00");
 						date = unparsedUpdate.substring(0, tIndex);
-						specificTime = unparsedUpdate.substring(tIndex + 1, endUpdateIndex);
-						updateWaitTimes.push(date + " at " + specificTime); 
+						specificTime = unparsedUpdate.substring(tIndex + 3, endUpdateIndex);
+						specificHourString = unparsedUpdate.substring(tIndex + 1, tIndex + 3);
+						specificHourInt = parseInt(specificHourString);
+						utcTimeInt = parseInt(utcTime);
+						timeChange = utcTimeInt + 5;
+						specificHourInt += timeChange;
+						if(specificHourInt < 0)
+							specificHourInt = 24 + specificHourInt;
+						specificHourString = "" + specificHourInt;
+						updateWaitTimes.push(date + " at " + specificHourString + specificTime);
 					} else if(indexOfUnknown == -1 && waiting[i].childNodes[0].innerHTML == 0) {
 						checkpointsCovered.push("0");
 						waitTimesIndices.push(waiting[i].childNodes[1].innerHTML);
@@ -269,8 +290,16 @@
 						tIndex = unparsedUpdate.indexOf("T");
 						endUpdateIndex = unparsedUpdate.indexOf("-04:00");
 						date = unparsedUpdate.substring(0, tIndex);
-						specificTime = unparsedUpdate.substring(tIndex + 1, endUpdateIndex);
-						updateWaitTimes.push(date + " at " + specificTime);
+						specificTime = unparsedUpdate.substring(tIndex + 3, endUpdateIndex);
+						specificHourString = unparsedUpdate.substring(tIndex + 1, tIndex + 3);
+						specificHourInt = parseInt(specificHourString);
+						utcTimeInt = parseInt(utcTime);
+						timeChange = utcTimeInt + 5;
+						specificHourInt += timeChange;
+						if(specificHourInt < 0)
+							specificHourInt = 24 + specificHourInt;
+						specificHourString = "" + specificHourInt;
+						updateWaitTimes.push(date + " at " + specificHourString + specificTime);
 					}
 				}
 
@@ -300,7 +329,7 @@
 			function removeData() {
 				checkpointsCovered = [], waitTimesIndices = [], compiledExtraChecks = [], extraWaitIndices = [], compiledDataCheck = [], compiledDataWait = [], updateWaitTimes = [], changingTimes = [], checkpointNames = []; //reset arrays
 
-				inputID = null, unknownWait = 0, indexOfUnknown = -1, counter = 0, unparsedUpdate = "", tIndex = -1, endUpdateIndex = -1, date = "", specificTime = "";  //reset variables
+				inputID = null, unknownWait = 0, indexOfUnknown = -1, counter = 0, unparsedUpdate = "", tIndex = -1, endUpdateIndex = -1, date = "", specificTime = "", utcTime = "", specificHourString = "", specificHourInt = null, timeChange = null, utcTimeInt = null;  //reset variables
 			}
 
 			//COMPILATION OF FUNCTIONS
@@ -310,12 +339,13 @@
 					compileData();
 				}
 				removeData();
+				alertNormal = true;
 			}  
 			
 	  	</script>
 
 	  	<div id="dialog" title="Instructions"> <!-- took out     class="ui-dialog-content"      -->
-			<p id="dialogContentText" style="visibility: hidden">Start by entering a 3 letter airport code. Do you wish to receive this message again?</p>
+			<p id="dialogContentText" style="visibility: hidden">Start by entering a 3 letter airport code. You can quickly select the input field by pressing tab instead of clicking on the field. Do you wish to receive this message again?</p>
 		</div> 
 	</body>
 </html>
