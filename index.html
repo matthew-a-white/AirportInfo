@@ -2,6 +2,7 @@
 
 <html manifest="index.appcache">
 	<title>Airport Data</title>
+	<meta name=viewport content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" type="text/css" href="airports.css">
 	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
 	<script src="js.cookie.js"></script>
@@ -20,27 +21,28 @@
 
 	  		//FIRST INSTRUCTION
 	  		$(function() {
-			    $( "#dialog" ).dialog({
-			      resizable: true,
-			      height: 200,
-			      width: 500,
-			      modal: false,
-			      draggable: true,
-			      dialogClass: "instructions success-dialog",
-			      buttons: {
-			        "No": function() {
-			          $(this).dialog("close");
-			          Cookies.set('getInstructions','no')
-			        },
-			        "Yes": function() {
-			          $(this).dialog("close");
-			          Cookies.set('getInstructions', 'yes');
-			          console.log(Cookies.get('getInstructions'));
-			        }
-			      }
-			    });
+	  			if(Cookies.get('getInstructions') == 'no') {
+	  				$("#dialogContentText").html("Start by entering a 3 letter airport code. Do you wish to receive this message again?");
+				    $( "#dialog" ).dialog({
+				      resizable: true,
+				      height: 200,
+				      width: 500,
+				      modal: false,
+				      draggable: true,
+				      dialogClass: "instructions success-dialog",
+				      buttons: {
+				        "No": function() {
+				          $(this).dialog("close");
+				          Cookies.set('getInstructions','no')
+				        },
+				        "Yes": function() {
+				          $(this).dialog("close");
+				          Cookies.set('getInstructions', 'yes');
+				        }
+				      }
+				    });
+				}
 			 });  
-	  		
 
 	  		//QUICK SETUP OF INPUT
 			$(function() {
@@ -307,7 +309,7 @@
 			
 	  	</script>
 	  	<div id="dialog" class="ui-dialog-content" title="Instructions">
-			<p>Start by entering a 3 letter airport code. Do you wish to receive this message again?</p>
+			<p id="dialogContentText"></p>
 		</div> 
 	</body>
 </html>
