@@ -18,12 +18,11 @@
 		<button onclick="getID()" id="button" style="left: 0.8vw; top: 11vh; position: absolute;">Submit  ></button>
 
 	  	<script>
-
 	  		//FIRST INSTRUCTION
 	  		$(function() {
-	  			if(Cookies.get('getInstructions') == 'no') {
-	  				$("#dialogContentText").html("Start by entering a 3 letter airport code. Do you wish to receive this message again?");
-				    $( "#dialog" ).dialog({
+	  			if(Cookies.get('getInstructions') == 'yes' || Cookies.get('getInstructions') == undefined) {
+	  				$("#dialogContentText").css("visibility", "visible");
+				    $("#dialog").dialog({
 				      resizable: true,
 				      height: 200,
 				      width: 500,
@@ -31,13 +30,13 @@
 				      draggable: true,
 				      dialogClass: "instructions success-dialog",
 				      buttons: {
-				        "No": function() {
-				          $(this).dialog("close");
-				          Cookies.set('getInstructions','no')
-				        },
 				        "Yes": function() {
 				          $(this).dialog("close");
-				          Cookies.set('getInstructions', 'yes');
+				          Cookies.set('getInstructions', 'yes')
+				        },
+				        "No": function() {
+				          $(this).dialog("close");
+				          Cookies.set('getInstructions', 'no');
 				        }
 				      }
 				    });
@@ -309,7 +308,7 @@
 			
 	  	</script>
 	  	<div id="dialog" class="ui-dialog-content" title="Instructions">
-			<p id="dialogContentText"></p>
+			<p id="dialogContentText" style="visibility: hidden">Start by entering a 3 letter airport code. Do you wish to receive this message again?</p>
 		</div> 
 	</body>
 </html>
