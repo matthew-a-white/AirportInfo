@@ -3,23 +3,24 @@
 <html manifest="index.appcache">
 	<title>Airport Data</title>
 	<meta name=viewport content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" type="text/css" href="airports.css">
+	<link rel="stylesheet" type="text/css" href="css/airports.css">
 	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
-	<script src="js.cookie.js"></script>
+	<script src="libraries/js.cookie.js"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
 
 	<body>
-		<p style="font-size: 30pt; text-align: center; top: 25vh; left: 19.5vw; max-width: 65vw; position: relative;" id="airport"></p>
-		<p style="font-size: 0.7em; top: 48vh; left: 30vw; position: relative;" id ="note"></p>
+		<p style="font-size: 30pt; text-align: center; top: 25vh; left: 18vw; max-width: 65vw; position: relative;" id="airport"></p>
+		<p style="font-size: 0.7em; top: 48vh; left: 27.7vw; position: relative;" id ="note"></p>
 		<p style="font-size: 10pt; bottom: 0vh; left: 2vh; position: absolute">If a checkpoint is missing, it is due to a lack of or faulty data provided by the TSA</p>
 		<p style="left: 1vw; top: 2vh; text-align: center; position: absolute; color: white;">Airport code:</p>
 		<input type="text" name="input" id="inputBox" style="left: 1vw; top: 7vh; position: absolute;">
 		<button onclick="getID()" id="button" style="left: 0.8vw; top: 11vh; position: absolute;">Submit  ></button>
 
 	  	<script>
-	  		//FIRST INSTRUCTION
-	  		$(function() {
+
+	  		//FIRST INSTRUCTION AND COOKIES
+	  		$(function() {			//equivalent to $( document ).ready(function() {
 	  			if(Cookies.get('getInstructions') == 'yes' || Cookies.get('getInstructions') == undefined) {
 	  				$("#dialogContentText").css("visibility", "visible");
 				    $("#dialog").dialog({
@@ -70,11 +71,9 @@
 			//END OF CHOOSING AIRPORT
 
 		  	//START SETUP OF VARIABLES AND FILES
-		    var data, allAirports, waiting, inputIndex, checkpointID; 
-		    var nextAirportIndex, checkpointIndexStart, checkpointIndexEnd;
-		    var checkpointNames = [];
-
+		    var data, allAirports, waiting;
 		    var waitTimes = ["No wait", "1-10 min", "11-20 min", "21-30 min", "31+ min"];
+		    var checkpointNames = [];
 		  	var checkpointsCovered = [];
 		  	var waitTimesIndices = [];
 		  	var updateWaitTimes = [];
@@ -86,7 +85,6 @@
 		  	//END FIRST SETUP
 
 		  	//START AIRPORT NAME (this section was moved up here so that even with no data, the airport name will be displayed)
-		  	
 		  	function getAirport(id) {
 		  		id = id.toUpperCase();
 
@@ -96,9 +94,9 @@
 				  		if(airportList[i].childNodes[1].innerHTML == id) {
 				  			airportName = airportList[i].childNodes[0].innerHTML;
 				  			$("#airport").html(airportList[i].childNodes[0].innerHTML);
-				  	  			for(var j = 0; j < airportList[i].getElementsByTagName("checkpoints")[0].getElementsByTagName("checkpoint").length; j++) {
-				  					checkpointNames.push(airportList[i].getElementsByTagName("checkpoints")[0].getElementsByTagName("checkpoint")[j].childNodes[1].innerHTML);		
-				  				}
+			  	  			for(var j = 0; j < airportList[i].getElementsByTagName("checkpoints")[0].getElementsByTagName("checkpoint").length; j++) {
+			  					checkpointNames.push(airportList[i].getElementsByTagName("checkpoints")[0].getElementsByTagName("checkpoint")[j].childNodes[1].innerHTML);		
+			  				}
 				  		}
 				  	} 
 
@@ -148,14 +146,12 @@
 		  	var body, tbl, tblBody;
 
 		  	function createTable(checkpoints, waitingTimes, updateTimes, changes) {
-		  		var tablePosition;
-
 		  		removeTable = true;
 		  		body = document.getElementsByTagName('body')[0];
 		 		tbl = document.createElement("table");
 		 		tblBody = document.createElement("tbody");
 
-		 		if(checkpoints > 0) {
+		 		if(checkpoints.length > 0) {
 		 			removeTable = true;
 		 		}
 
@@ -191,7 +187,6 @@
 				      	cell.appendChild(cellText);
 				      	row.appendChild(cell);
 				    }
-
 				    // add the row to the end of the table body
 				    tblBody.appendChild(row);
 				}
@@ -224,16 +219,13 @@
 		  		}
 		  		return finalChanging;
 		  	}
-
 		  	//END CREATING FUNCTIONS TO ORGANIZE CODE
 
 		  	//START GETTING DATA
 		  	var compiledDataCheck = [], compiledDataWait = [];
-		  	var unknownCheck = 0, unknownWait; //for unknown checkpoints
-		  	var compiledExtraChecks = [], extraWaitIndices = [], coveredExtras = [];
-		  	var unparsedUpdate, tIndex, endUpdateIndex;
-		  	var date, specificTime, unknownUpdateTime, indexOfUnknown = -1, counter = 0;
-		  	var extraZeroCheck = false;
+		  	var unknownWait, indexOfUnknown = -1, counter = 0; //for unknown checkpoints
+		  	var compiledExtraChecks = [], extraWaitIndices = [];
+		  	var unparsedUpdate, tIndex, endUpdateIndex, date, specificTime;  //for update times section of table
 		     
 		    function compileData() {
 				for(var i = 0; i < waiting.length; i++) {  //waiting is list of all WaitTimes nodes
@@ -268,8 +260,7 @@
 						endUpdateIndex = unparsedUpdate.indexOf("-04:00");
 						date = unparsedUpdate.substring(0, tIndex);
 						specificTime = unparsedUpdate.substring(tIndex + 1, endUpdateIndex);
-						unknownUpdateTime = date + " at " + specificTime;
-						updateWaitTimes.push(unknownUpdateTime);
+						updateWaitTimes.push(date + " at " + specificTime);
 					}
 				}
 
@@ -291,19 +282,20 @@
 			}
 			//END GETTING DATA 
 
-			//START RESET FUNCTION
+			//QUICK RESET FUNCTION
 			function removeData() {
-				checkpointsCovered = [], waitTimesIndice = [], compiledExtraChecks = [], extraWaitIndices = [], compiledDataCheck = [], compiledDataWait = [], updateWaitTimes = [], changingTimes = [];
-				airportIncluded = false;
-			}
-			//END RESET FUNCTION
+				checkpointsCovered = [], waitTimesIndices = [], compiledExtraChecks = [], extraWaitIndices = [], compiledDataCheck = [], compiledDataWait = [], updateWaitTimes = [], changingTimes = [], checkpointNames = []; //reset arrays
 
+				airportIncluded = false, inputID = null, unknownWait = 0, indexOfUnknown = -1, counter = 0, unparsedUpdate = "", tIndex = -1, endUpdateIndex = -1, date = "", specificTime = "";  //reset variables
+			}
+
+			//COMPILATION OF FUNCTIONS
 			function main(id) {
 				if(getAirport(id)) {
 					ajaxRequest(id);
 					compileData();
-					removeData();
 				}
+				removeData();
 			}   
 			
 	  	</script>
