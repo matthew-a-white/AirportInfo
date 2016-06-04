@@ -4,6 +4,7 @@
 	<title>Airport Data</title>
 	<link rel="stylesheet" type="text/css" href="airports.css">
 	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
+	<script src="js.cookie.js"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
 
@@ -17,38 +18,41 @@
 
 	  	<script>
 
-	  		/*$(function() {
+	  		//FIRST INSTRUCTION
+	  		$(function() {
 			    $( "#dialog" ).dialog({
 			      resizable: true,
-			      height: 227,
+			      height: 200,
 			      width: 500,
 			      modal: false,
+			      draggable: true,
+			      dialogClass: "instructions success-dialog",
 			      buttons: {
-			        "Yes": function() {
-			          $(this).dialog("close");
-			        },
 			        "No": function() {
 			          $(this).dialog("close");
+			          Cookies.set('getInstructions','no')
+			        },
+			        "Yes": function() {
+			          $(this).dialog("close");
+			          Cookies.set('getInstructions', 'yes');
+			          console.log(Cookies.get('getInstructions'));
 			        }
 			      }
 			    });
-			 });  */
+			 });  
+	  		
 
-			//FIRST INSTRUCTION
-		  	confirm("Start by entering the 3 letter airport code. Do you want this to be displayed again?");
-
-		  	//START OF CHOOSING AIRPORT
-		  	
-		  	
-		  	var inputID, airportIncluded = false, removeTable = false;
-
-		  	$.ready(function() {
-			  	$("#inputBox").keyup(function(event){
-				    if(event.keyCode == 13){
+	  		//QUICK SETUP OF INPUT
+			$(function() {
+				$("#inputBox").keyup(function(event) {
+				    if(event.keyCode == 13) {
 				        $("#button").click();
 				    }
 				});
-		  	});
+			});
+	  		
+		  	//START OF CHOOSING AIRPORT
+		  	var inputID, airportIncluded = false, removeTable = false;
 
 			function getID() {
 				airportIncluded = true;
@@ -287,14 +291,10 @@
 			//END GETTING DATA 
 
 			//START RESET FUNCTION
-
 			function removeData() {
-				//tbl.remove();
-				//tblBody.remove();
 				checkpointsCovered = [], waitTimesIndice = [], compiledExtraChecks = [], extraWaitIndices = [], compiledDataCheck = [], compiledDataWait = [], updateWaitTimes = [], changingTimes = [];
 				airportIncluded = false;
 			}
-
 			//END RESET FUNCTION
 
 			function main(id) {
@@ -303,12 +303,12 @@
 					compileData();
 					removeData();
 				}
-			}  
+			}   
 			
 	  	</script>
-	  	<!-- <div id="dialog" class="ui-dialog-content" title="Instructions">
+	  	<div id="dialog" class="ui-dialog-content" title="Instructions">
 			<p>Start by entering a 3 letter airport code. Do you wish to receive this message again?</p>
-		</div>  -->
+		</div> 
 	</body>
 </html>
 

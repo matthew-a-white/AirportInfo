@@ -12,25 +12,41 @@ table {
     border-radius: 25px;
 }
 
-/* .ui-dialog .ui-dialog-content {
-    position: relative;
-    border: 0;
-    padding: .5em 1em;
-    background-color: blue;
-    overflow: auto;
-} 
-*/
+.ui-dialog.success-dialog {
+    padding: 0 !important; 
+    overflow: hidden;
+}
 
+.ui-dialog.success-dialog .ui-widget-header {
+    background: #D8865D;     /* color of title background */
+    color: black;            /* color of title text */
+    font-weight: normal;
+}
+
+.ui-dialog.success-dialog .ui-dialog-titlebar {
+    padding: 0.1em .5em;
+} 
+
+.instructions .ui-dialog-titlebar-close {
+    display: none;
+}
+
+.instructions .ui-dialog-buttonpane {
+    background-color: #04659D;     /* button pane color */
+}
+
+.ui-widget-content.success-dialog {
+    background: white;     /* color of content text background */
+    border: 1px solid white; /* color of border */
+    padding: 0.1em .5em;    
+}
 
 #button {
     background-color: #D8865D;
-    float: #009900;
     border: none;
     color: white;
     padding: 5px 13px;
     text-align: center;
-    text-decoration: none;
-    display: inline-block;
     font-size: 16px;
     -webkit-transition-duration: 0.4s; /* Safari */
     transition-duration: 0.4s;
