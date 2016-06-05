@@ -31,7 +31,7 @@
 						modal: false,
 						draggable: true,
 						open: function (event, ui) {
-							$('#dialog').css('overflow', 'hidden'); //this line does the actual hiding
+							$('#dialog').css('overflow', 'hidden'); //for no scrollbar 
 						},
 						dialogClass: "instructions success-dialog",
 						buttons: {
@@ -135,6 +135,7 @@
 		  	function ajaxRequest(id) {
 				var url = "http://apps.tsa.dhs.gov/MyTSAWebService/GetWaitTimes.ashx?ap=" + id;
 			    url = 'http://query.yahooapis.com/v1/public/yql?q=' + encodeURIComponent('select * from html where url="' + url + '"') + '&format=xml';
+
 			    $.ajax({
 			        type: "GET",
 			        url: url,
@@ -212,8 +213,7 @@
 				    }
 				    // add the row to the end of the table body
 				    tblBody.appendChild(row);
-				}
-				 
+				}				 
 				// put the <tbody> in the <table>
 				tbl.appendChild(tblBody);
 				// appends <table> into <body>
@@ -335,7 +335,13 @@
 			//COMPILATION OF FUNCTIONS
 			function main(id) {
 				if(getAirport(id)) {
-					ajaxRequest(id);
+					try {
+						ajaxRequest(id);
+					} catch (err) {
+						console.log("The error is: \n" + err);
+						removeData();
+						return;	//return is just to keep errors from showing up in console due to waiting.length in compileData()
+					} 
 					compileData();
 				}
 				removeData();
