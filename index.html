@@ -14,9 +14,9 @@
 		<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
 	</head>
 	<body>
-		<p style="color: #07364D; font-size: 30pt; text-align: center; top: 25vh; left: 18vw; max-width: 65vw; position: relative;" id="airport"></p>
-		<p style="font-size: 0.7em; top: 48vh; left: 27.7vw; position: relative; color: #07364D;" id ="note"></p>
-		<p style="font-size: 1em; top: 48vh; left: 40vw; position: relative;" id ="precheckNote"></p>
+		<p style="color: #014161; font-size: 30pt; text-align: center; top: 25vh; left: 18vw; max-width: 65vw; position: relative;" id="airport"></p>
+		<p style="font-size: 0.7em; top: 48vh; left: 27.7vw; position: relative; color: #014161;" id ="note"></p>
+		<p style="color: #014161; font-size: 1.5em; left: 37vw; top: 34vh; position: absolute;" id ="precheckNote"></p>
 		<p style="font-size: 10pt; bottom: 0vh; left: 2vh; position: absolute;" id="footer">If a checkpoint is missing, it is due to a lack of or faulty data provided by the TSA</p>
 		<p style="left: 1vw; top: 2vh; text-align: center; position: absolute; color: white;" id="inputInstruction">Airport code:</p>
 		<input type="text" name="input" id="inputBox" style="left: 1vw; top: 7vh; position: absolute;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
@@ -123,6 +123,7 @@
 				  				$("#precheckNote").html("Precheck is available at this airport");
 				  			else
 				  				$("#precheckNote").html("Precheck is not available at this airport");
+
 			  	  			for(var j = 0; j < airportList[i].getElementsByTagName("checkpoints")[0].getElementsByTagName("checkpoint").length; j++) {
 			  					checkpointNames.push(airportList[i].getElementsByTagName("checkpoints")[0].getElementsByTagName("checkpoint")[j].childNodes[1].innerHTML);		
 			  				}
@@ -331,9 +332,8 @@
 				createTable(compiledDataCheck, compiledDataWait, updateWaitTimes, changingTimes);
 
 				var tableHeight = tbl.offsetHeight;
-				var notePositionTop = tableHeight + 150;
+				var notePositionTop = tableHeight + 175;
 				$("#note").css("top", notePositionTop);
-				$("#precheckNote").css("top", notePositionTop);
 			}
 			//END GETTING DATA 
 
