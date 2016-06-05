@@ -4,17 +4,21 @@
 	<head>
 		<title>Airport Data</title>
 		<meta name=viewport content="width=device-width, initial-scale=1">
-		<link rel="stylesheet" type="text/css" href="css/airports.css">
+		<link rel="stylesheet" media="(max-width: 1020px)" type="text/css" href="css/max1020.css">
+		<link rel="stylesheet" media="(min-width: 1020px)" type="text/css" href="css/airports.css">
+		<!-- <link rel="stylesheet" media="(orientation: portrait)" href="portrait.css">
+		<link rel="stylesheet" media="(orientation: landscape)" href="landscape.css"> -->
 		<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
 		<script src="libraries/js.cookie.js"></script>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
 		<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
 	</head>
 	<body>
-		<p style="font-size: 30pt; text-align: center; top: 25vh; left: 18vw; max-width: 65vw; position: relative;" id="airport"></p>
-		<p style="font-size: 0.7em; top: 48vh; left: 27.7vw; position: relative;" id ="note"></p>
-		<p style="font-size: 10pt; bottom: 0vh; left: 2vh; position: absolute">If a checkpoint is missing, it is due to a lack of or faulty data provided by the TSA</p>
-		<p style="left: 1vw; top: 2vh; text-align: center; position: absolute; color: white;">Airport code:</p>
+		<p style="color: #07364D; font-size: 30pt; text-align: center; top: 25vh; left: 18vw; max-width: 65vw; position: relative;" id="airport"></p>
+		<p style="font-size: 0.7em; top: 48vh; left: 27.7vw; position: relative; color: #07364D;" id ="note"></p>
+		<p style="font-size: 1em; top: 48vh; left: 40vw; position: relative;" id ="precheckNote"></p>
+		<p style="font-size: 10pt; bottom: 0vh; left: 2vh; position: absolute;" id="footer">If a checkpoint is missing, it is due to a lack of or faulty data provided by the TSA</p>
+		<p style="left: 1vw; top: 2vh; text-align: center; position: absolute; color: white;" id="inputInstruction">Airport code:</p>
 		<input type="text" name="input" id="inputBox" style="left: 1vw; top: 7vh; position: absolute;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
 		<button onclick="getID()" id="button" style="left: 0.8vw; top: 11vh; position: absolute;">Submit  ></button>
 
@@ -87,6 +91,7 @@
 		  	var waitTimesIndices = [];
 		  	var updateWaitTimes = [];
 		  	var utcTime; //used for putting update times in the airport's local time
+		  	var precheck; //for displaying whether precheck is available
 
 		  	var xhttp = new XMLHttpRequest();
 		  	xhttp.open("GET", "apcp.xml", false); //false makes it not asynchronous
@@ -113,6 +118,11 @@
 				  			airportName = airportList[i].childNodes[0].innerHTML;
 				  			$("#airport").html(airportName);
 				  			utcTime = airportList[i].childNodes[6].innerHTML;
+				  			precheck = airportList[i].childNodes[8].innerHTML;
+				  			if(precheck === "true")
+				  				$("#precheckNote").html("Precheck is available at this airport");
+				  			else
+				  				$("#precheckNote").html("Precheck is not available at this airport");
 			  	  			for(var j = 0; j < airportList[i].getElementsByTagName("checkpoints")[0].getElementsByTagName("checkpoint").length; j++) {
 			  					checkpointNames.push(airportList[i].getElementsByTagName("checkpoints")[0].getElementsByTagName("checkpoint")[j].childNodes[1].innerHTML);		
 			  				}
@@ -125,6 +135,7 @@
 			  		});
 			  		$("#airport").html("");
 			  		$("#note").html("");
+			  		$("#precheckNote").html("");
 			  		return false;
 			  	}
 			  	return true;
@@ -195,7 +206,7 @@
 				      	} else if(i == 0 && j == 1) {
 				      		cellText = document.createTextNode("Waiting times");
 				      	} else if(i == 0 && j == 2) {
-				      		cellText = document.createTextNode("Last update");
+				      		cellText = document.createTextNode("Last TSA update");
 				      	} else if(i == 0) {
 				      		cellText = document.createTextNode("Changing wait times");
 				      	} else if(j == 0) {
@@ -322,6 +333,7 @@
 				var tableHeight = tbl.offsetHeight;
 				var notePositionTop = tableHeight + 150;
 				$("#note").css("top", notePositionTop);
+				$("#precheckNote").css("top", notePositionTop);
 			}
 			//END GETTING DATA 
 
