@@ -4,42 +4,15 @@ body {
 
 table {
     border-collapse: collapse;
-    width: 47%;
+    width: 10%;
     position: absolute;
-    top: 38vh;
+    top: 15vh;
     left: 28vw;
     border-style: hidden;
     border-radius: 25px;
 }
 
-.ui-dialog.success-dialog {
-    padding: 0 !important; 
-    overflow: hidden;
-}
 
-.ui-dialog.success-dialog .ui-widget-header {
-    background: #D8865D;     /* color of title background */
-    color: black;            /* color of title text */
-    font-weight: normal;
-}
-
-.ui-dialog.success-dialog .ui-dialog-titlebar {
-    padding: 0.1em .5em;
-} 
-
-.instructions .ui-dialog-titlebar-close {
-    display: none;
-}
-
-.instructions .ui-dialog-buttonpane {
-    background-color: #04659D;     /* button pane color */
-}
-
-.ui-widget-content.success-dialog {
-    background: white;     /* color of content text background */
-    border: 1px solid white; /* color of border */
-    padding: 0.1em .5em;    
-}
 
 #button:hover {
     background-color: #D14803;
@@ -152,6 +125,10 @@ tr:last-child td:last-child {
     left: 0.8vw; 
     top: 14vh; 
     position: absolute;
+}
+
+#dialog {
+    visibility: hidden;
 }
 
 
