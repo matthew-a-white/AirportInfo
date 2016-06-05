@@ -90,11 +90,9 @@ tr:last-child td:last-child {
 
 #airport {
     color: #07364D; 
-    font-size: 30pt; 
+    font-size: 25pt; 
     text-align: center; 
-    top: 25vh; 
-    left: 18vw; 
-    max-width: 65vw; 
+    top: 20vh; 
     position: relative;
 }
 
@@ -108,8 +106,8 @@ tr:last-child td:last-child {
 
 #precheckNote {
     font-size: 1em; 
-    top: 48vh; 
-    left: 40vw; 
+    top: 10vh; 
+    left: 0vw; 
     position: relative;
 }
 
