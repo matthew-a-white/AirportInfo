@@ -9,5 +9,3 @@ The API used to obtain the necessary information seems to be deprecated as data 
 Display information regarding parking spaces available at airport.
 
 Add support for mobile devices
-
-Need to add support for mobile
