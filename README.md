@@ -2,9 +2,6 @@
 Load below link to get to use app.
 http://matthewawhite.github.io/airportinfo/
 
-NOTE:
-The API used to obtain the necessary information seems to be deprecated as no information is no longer available.
-
 # Issues
 The API used to obtain the necessary information seems to be deprecated as data is no longer being published by the TSA (check for a change of the API implementation).
 
