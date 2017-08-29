@@ -1,20 +1,17 @@
 # AirportInfo
 
-NOTE:
-The API used to obtain the necessary information seems to be deprecated as no information is no longer available.
-
-
-
-Fix:
-Find out about any possible changes to the API causing the lack of data.
-
 Link to site:
 http://matthewawhite.github.io/airportinfo/
 
-Displaying information regarding wait times at TSA airport security lines as well as parking spaces available (if available).
+NOTE:
+The API used to obtain the necessary information seems to be deprecated as no information is no longer available.
 
-The reason that the code is all hosted in one html file is because it simplifies the process for allowing access on my phone.
+# Issues
+The API used to obtain the necessary information seems to be deprecated as data is no longer being published by the API (check for a change of the API implementation).
 
-Occasionally the TSA provides faulty data where there is a checkpointIndex that does not refer to any checkpoint according to the data provided by the TSA.
+# Future Improvements 
+Display information regarding parking spaces available at airport.
+
+Add support for mobile devices
 
 Need to add support for mobile
